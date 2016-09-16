@@ -3,6 +3,10 @@ by Inessa Prokofyeva
 
 ========================================================
 
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(fig.width=12, fig.height=8, fig.path='Figs/',
+                      echo=FALSE, warning=FALSE, message=FALSE)
+```
 This report explores white wine quality according dataset with variables on quantifying the chemical properties of each wine and wine expert's ratings.
 
 The dataset is taken from _P. Cortez, A. Cerdeira, F. Almeida, T. Matos and J. Reis. 
@@ -19,7 +23,7 @@ library(memisc)
 ## Loading and Transforming Data
 The dataset contains 4898 observations with 13 variables. 11 variables contain chemical characteristics, the first "X" variable represents the ID, the "quality" variable is an experts rate of wine.
 ```{r echo=FALSE, Load_the_Data}
-ww <- read.csv('/Users/Ulliwy/study/P4/project/wineQualityWhites.csv')
+ww <- read.csv('/Users/Ulliwy/study/P4/project/udacity_p4/wineQualityWhites.csv')
 dim(ww)
 summary(ww)
 ```
@@ -47,32 +51,26 @@ names(ww)
 
 # Univariate Plots Section
 The dataset contains 4898 observations with 13 quantitative variables. Plotting all these distribution histograms are very informative for investigation start.
-
+```{r Histogram_Func}
+# adding a function for histograms drawing
+draw_hist <- function(variable, binwidth = .1) {
+  return(ggplot(aes_string(x = variable), data = ww) + 
+           geom_histogram(binwidth = binwidth))
+  }
+```
 ```{r echo=FALSE, message=FALSE, warning=FALSE, Univariate_Plots}
-g1 <- ggplot(aes(x = fixed.acidity), data = ww) +
-  geom_histogram()
-g2 <- ggplot(aes(x = volatile.acidity), data = ww) +
-  geom_histogram()
-g3 <- ggplot(aes(x = citric.acid), data = ww) +
-  geom_histogram()
-g4 <- ggplot(aes(x = residual.sugar), data = ww) +
-  geom_histogram()
-g5 <- ggplot(aes(x = chlorides), data = ww) +
-  geom_histogram()
-g6 <- ggplot(aes(x = free.sulfur.dioxide), data = ww) +
-  geom_histogram()
-g7 <- ggplot(aes(x = total.sulfur.dioxide), data = ww) +
-  geom_histogram()
-g8 <- ggplot(aes(x = density), data = ww) +
-  geom_histogram()
-g9 <- ggplot(aes(x = pH), data = ww) +
-  geom_histogram()
-g10 <- ggplot(aes(x = sulphates), data = ww) +
-  geom_histogram()
-g11 <- ggplot(aes(x = alcohol), data = ww) +
-  geom_histogram()
-g12 <- ggplot(aes(x = quality), data = ww) +
-  geom_histogram()
+g1 <- draw_hist('fixed.acidity')
+g2 <- draw_hist('volatile.acidity', .05)
+g3 <- draw_hist('citric.acid', .05)
+g4 <- draw_hist('residual.sugar', 2)
+g5 <- draw_hist('chlorides', .005)
+g6 <- draw_hist('free.sulfur.dioxide', 5)
+g7 <- draw_hist('total.sulfur.dioxide', 5)
+g8 <- draw_hist('density', .001)
+g9 <- draw_hist('pH', .02)
+g10 <- draw_hist('sulphates', .02)
+g11 <- draw_hist('alcohol')
+g12 <- draw_hist('quality', .5)
 
 grid.arrange(g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, g11, g12)
 ```
@@ -81,19 +79,15 @@ grid.arrange(g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, g11, g12)
 Acid level is very important in winemaking. Too little acid and your wine tastes flabby and non-committal. Too much acid and your wine will taste like vinegar. Acids must be properly countered with other ingredients in wine to be "in balance".
 Let's look at acids distributions in wine.
 ```{r echo=FALSE, Acidity}
-acid_1 <- ggplot(aes(x = fixed.acidity), data = ww) +
-  geom_histogram(binwidth = .2)
-acid_2 <- ggplot(aes(x = volatile.acidity), data = ww) +
-  geom_histogram(binwidth = .02)
-acid_3 <- ggplot(aes(x = citric.acid), data = ww) +
-  geom_histogram(binwidth = .05)
+acid_1 <- draw_hist('fixed.acidity', .2)
+acid_2 <- draw_hist('volatile.acidity', .02)
+acid_3 <- draw_hist('citric.acid', .05)
 grid.arrange(acid_1, acid_2, acid_3)
 ```
 
 It looks like for _fixed.acidity_ and _citric.acidity_ distributions look close to normal, but for _volatile.acidity_ there is a long tail distribution. Applying _log10()_ function will transform the shape to be close to normal.
 ```{r echo=FALSE, Log10_Transformation}
-ggplot(aes(x = volatile.acidity), data = ww) +
-  geom_histogram(binwidth = .01) +
+draw_hist('volatile.acidity', .01) +
   coord_trans(x = 'log10') +
   xlab('log10(volatile.acidity)')
 ```
@@ -112,19 +106,16 @@ Further we'll investigate the influence of wine acidity to quality.
 Different types of wines contain different amount of sugar in it. The distribution of residual sugar in wine looks positively skewed.
 ```{r echo=FALSE, Residual_Sugar}
 summary(ww$residual.sugar)
-ggplot(aes(x = residual.sugar), data = ww) +
-  geom_histogram(binwidth = 1)
+draw_hist('residual.sugar', 1)
 ```
 
 Applying _log10()_ transformation for better understanding the distribution of residual sugar. The transformed graph appears bimodal with peaks around 1.5 and 9. That can be explained by different types of wines: dry and off-dry. The main values are between 1 and 2.
 ```{r echo=FALSE, Log10_Residual_Sugar}
-sugar_1 <- ggplot(aes(x = residual.sugar), data = ww) +
-  geom_histogram(binwidth = .03) +
+sugar_1 <- draw_hist('residual.sugar', .03) +
   scale_x_log10() +
   xlab('log10(residual.sugar)')
 
-sugar_2 <- ggplot(aes(x = residual.sugar), data = ww) +
-  geom_histogram(binwidth = .1) +
+sugar_2 <- draw_hist('residual.sugar', .1) +
   coord_trans(x = 'log10') +
   scale_x_continuous(breaks = c(0, 1, 2, 3, 4, 5, 10, 20, 40)) +
   xlab('log10(residual.sugar)')
@@ -133,30 +124,34 @@ grid.arrange(sugar_1, sugar_2)
 ```
 
 According dataset description it is rare to find wines with sugar less than 1 gram/liter and wines with greater than 45 grams/liter. The dataset contains 77 observations with _residual.sugar < 1_ and only 1 with _residual.sugar >= 45_.
-```{r Rare_Findings}
+
+Less than 1 gram/liter:
+```{r Rare_Findings_1}
 # Less than 1 gram/liter
 table(ww$residual.sugar < 1)
 head(subset(ww[c('residual.sugar', 'quality')], ww$residual.sugar < 1))
+```
 
-# Greater then 45 grams/liter
+More than 45 grams/liter:
+```{r Rare_Findings_2}
+# Greater than 45 grams/liter
 table(ww$residual.sugar >= 45)
 subset(ww[c('residual.sugar', 'quality')], ww$residual.sugar >= 45)
 ```
+
 
 ## Alcohol
 Most wines have alcohol percent between 9 and 12 with median value 10.4. There are not so much strong wines, there are the tendency that the higher alcohol level the less observations can be found. I don't think that alcohol level very affects quality but it may affect other characteristics.
 ```{r echo = FALSE, Alcohol}
 summary(ww$alcohol)
-ggplot(aes(x = alcohol), data = ww) +
-  geom_histogram(binwidth = .1)
+draw_hist('alcohol', .1)
 ```
 
 ## pH
 According to Alison Crowe of Winemaker Magazine “pH is the backbone of a wine”. The pH level affects many characteristics in wine to keep the balance of taste. In technology of winemaking pH < 3.3 is recommended for white wines.
 ```{r echo=FALSE, pH}
 summary(ww$pH)
-ggplot(aes(x = pH), data = ww) +
-  geom_histogram(binwidth = .01)
+draw_hist('pH', .01)
 ```
 
 The distribution looks pretty normal so indeed we see that the major of values are concentrated between 3.0 and 3.3 pH levels. But there also wines with higher or lower pH values. Minimum value is 2.7 and maximum is 3.8.
@@ -168,10 +163,8 @@ Looking at _total.sulfur.dioxide_ distribution it is noticed that the major of v
 ```{r echo=FALSE}
 summary(ww$total.sulfur.dioxide)
 subset(ww, ww$total.sulfur.dioxide > 400)
-sulph_1 <- ggplot(aes(x = total.sulfur.dioxide), data = ww) +
-  geom_histogram(binwidth = 5)
-sulph_2 <- ggplot(aes(x = free.sulfur.dioxide), data = ww) +
-  geom_histogram(binwidth = 1)
+sulph_1 <- draw_hist('total.sulfur.dioxide', 5)
+sulph_2 <- draw_hist('free.sulfur.dioxide', 5)
 sulph_3 <- ggplot(aes(x = sulphates * 1000), data = ww) +
   geom_histogram(binwidth = 10)
 
@@ -244,25 +237,25 @@ dens_1 <- ggplot(aes(x = total.acidity, y = density), data = ww) +
   geom_jitter(alpha = 1/5) +
   xlim(min(ww$total.acidity), quantile(ww$total.acidity, probs = .99)) +
   ylim(min(ww$density), quantile(ww$density, probs = .99)) +
-  geom_smooth()
+  geom_smooth(aes(colour = I('#cce6ff')))
 
 dens_2 <- ggplot(aes(x = chlorides, y = density), data = ww) +
   geom_jitter(alpha = 1/5) +
   xlim(min(ww$chlorides), quantile(ww$chlorides, probs = .95)) +
   ylim(min(ww$density), quantile(ww$density, probs = .99)) +
-  geom_smooth(aes(colour = I('red')))
+  geom_smooth(aes(colour = I('#66b3ff')))
 
 dens_3 <- ggplot(aes(x = total.sulfur.dioxide, y = density), data = ww) +
   geom_jitter(alpha = 1/5) +
   xlim(min(ww$total.sulfur.dioxide), quantile(ww$total.sulfur.dioxide, probs = .99)) +
   ylim(min(ww$density), quantile(ww$density, probs = .99)) +
-  geom_smooth(aes(colour = I('#e6e600')))
+  geom_smooth(aes(colour = I('#0080ff')))
 
 dens_4 <- ggplot(aes(x = pH, y = density), data = ww) +
   geom_jitter(alpha = 1/5) +
   xlim(min(ww$pH), quantile(ww$pH, probs = .99)) +
   ylim(min(ww$density), quantile(ww$density, probs = .99)) +
-  geom_smooth(aes(colour = I('#00e64d')))
+  geom_smooth(aes(colour = I('#004d99')))
 
 grid.arrange(dens_1, dens_2, dens_3, dens_4, ncol = 2)
 ```
@@ -291,30 +284,69 @@ ggplot(aes(x = fixed.acidity, y = density), data = ww) +
   ylim(min(ww$density), quantile(ww$density, probs = .99)) +
   geom_smooth()
 ```
+There is a tendency that _density_ is growing with growth of _fixed.acidity_. The correlation is 0.2756088, so the trend is not very clear but it still is.
 
 ## What impacts quality?
 Of course that's pretty curious how other characterictics impact each other but the main question is what impacts wine quality? To select the perfect quality wine we should know how to identify it or at least to know what characteristics to look for. The boxplots below show us the specific values for wines of different rates.
 ```{r echo=FALSE, Boxplots_Quality}
+q1 <- ggplot(aes(x = rate, y = density), data = ww) +
+  geom_boxplot()
 q2 <- ggplot(aes(x = rate, y = residual.sugar), data = ww) +
   geom_boxplot()
-q3 <- ggplot(aes(x = rate, y = total.sulfur.dioxide), data = ww) +
+q3 <- ggplot(aes(x = rate, y = free.sulfur.dioxide), data = ww) +
+  geom_boxplot()
+q4 <- ggplot(aes(x = rate, y = sulphates), data = ww) +
   geom_boxplot()
 q5 <- ggplot(aes(x = rate, y = pH), data = ww) +
   geom_boxplot()
 q6 <- ggplot(aes(x = rate, y = alcohol), data = ww) +
   geom_boxplot()
-grid.arrange( q2, q3, q5, q6)
+
+grid.arrange(q1, q2, q3, q4, q5, q6)
+```
+
+According previous plots it seems that there is a trend that density for better quality wines decreasing and has smaller range. As expected the widest range is for average quality.
+```{r Density_Boxplot}
+ggplot(aes(x = rate, y = density), data = ww) +
+  ylim(min(ww$density), quantile(ww$density, probs = .99)) +
+  geom_boxplot()
+```
+
+Quality: "below average"
+```{r below_average}
+summary(ww$density, data = subset(ww, ww$rate == 'below average'))
+```
+
+Quality: "average"
+```{r average}
+summary(ww$density, data = subset(ww, ww$rate == 'average'))
+```
+
+Quality: "good"
+```{r good}
+summary(ww$density, data = subset(ww, ww$rate == 'good'))
+```
+
+Quality: "very good"
+```{r very_good}
+summary(ww$density, data = subset(ww, ww$rate == 'very good'))
+```
+
+The similar picture we see for alcohol but in opposite direction. Better quality wines has higher percentage of alcohol.
+```{r Alcohol_Boxplot}
+ggplot(aes(x = rate, y = alcohol), data = ww) +
+  geom_boxplot()
 ```
 
 The range for sugar amount in wine is smaller for very good wines instead of others. The biggest range is for average what is predictable. But still there is one oultier for best wines that says that the sugar lever can't be the only one factor for quality. So trying to find a bottle of no sugar wine in the store won't guarantee it's quality.
 ```{r echo=FALSE, warning=FALSE, Sugar_Quality}
 ggplot(aes(x = quality, y = residual.sugar), data = ww) +
   ylim(0, quantile(ww$residual.sugar, probs = .99)) +
-  geom_jitter(alpha = 1/5)
+  geom_jitter(alpha = 1/5, size = 2)
 
 ggplot(aes(x = alcohol, y = residual.sugar), data = ww) +
   ylim(0, quantile(ww$residual.sugar, probs = .99)) +
-  geom_jitter(alpha = 1/5) +
+  geom_jitter(alpha = 1/5, size = 2) +
   geom_smooth()
 ```
 
@@ -328,7 +360,8 @@ As it was mentioned before the pH level is the core of wine quality. Here we see
 ```{r echo=FALSE, message=FALSE, warning=FALSE, pH_Histogram}
 ggplot(aes(x = pH, fill = rate), data = ww) +
   geom_histogram() +
-  scale_fill_brewer(type = 'qual')
+  scale_fill_brewer(type = 'seq', direction = -1) + 
+  theme_dark()
 ```
 
 I was never thinking that the alcohol level can be significant for drinks and especially for wines. But as we can see here the alcohol level for very good quality wines is much higher that for others. The alcohol median value and range are probably the same for bad and average wines. But as higher alcohol level the better quality according graphs. I don't think that it's a rule, but a curious notice. And there is an exception on this rule (outlier on a graph).
@@ -349,15 +382,17 @@ In previous section I've described the relationships between wine characteristic
 ggplot(aes(x = rate, y = total.acidity), data = ww) +
   ylim(quantile(ww$total.acidity, probs = .01), 
        quantile(ww$total.acidity, probs = .99)) +
-  geom_jitter(aes(color = ww$alcohol)) +
-  scale_colour_gradient(low = I("blue"), high = I('yellow'))
+  geom_jitter(aes(color = ww$alcohol), size = 3) +
+  scale_colour_gradient()
 ```
 
 And as we saw before there is a tendency that better quality wines have higher alcohol level. The widest range in acidity is observed for average wines, for better quality there is smaller range in acidity and higher level of alcohol.
+
+Let's look at the similar picture but with residual sugar:
 ```{r echo=FALSE, warning=FALSE, message=FALSE, Quality_ResSugar}
 ggplot(aes(x = quality, y = residual.sugar), data = ww) +
   ylim(0, quantile(ww$residual.sugar, probs = .99)) +
-  geom_jitter(aes(color = ww$alcohol), alpha = 1/5)
+  geom_jitter(aes(color = ww$alcohol), alpha = 1/5, size = 2)
 ```
 
 This chart shows the trend that the higher sugar level the stronger wine is. There is a major concentration of values closer to 0. For better wines there is no any concentration of dots, the values are spread along all sugar levels. But the tendency about alcohol is true for all types of wine, lower sugar level corresponds to lower level of alcohol (light blue dots on the bottom).
@@ -366,7 +401,19 @@ The next chart allows to see relationships with _acidity_ and _free.sulfur.dioxi
 ```{r echo=FALSE, warning=FALSE, message=FALSE, SO2_Acidity}
 ggplot(aes(y = free.sulfur.dioxide, x = total.acidity), data = ww) +
   ylim(min(ww$free.sulfur.dioxide), quantile(ww$free.sulfur.dioxide, probs = .99)) +
-  geom_jitter(aes(color = ww$rate))
+  geom_jitter(aes(color = ww$rate), size = 2) +
+  scale_color_brewer(type = 'seq', palette = 'PuBuGn') + 
+  theme_dark()
+```
+
+There was shown before that density increasing as acidity increasing. Next plot shows what values for these two characteristics has wines according their quality. And the main amount of high quality wines are under the line
+```{r}
+ggplot(aes(x = total.acidity, y = density, color = rate), data = ww) +
+  geom_jitter(size = 2) +
+  scale_color_brewer() +
+  xlim(min(ww$total.acidity), quantile(ww$total.acidity, probs = .99)) +
+  ylim(min(ww$density), quantile(ww$density, probs = .99)) +
+  geom_smooth(color = 'black')
 ```
 
 Finally I'll plot the dependency between _density_ and _residual.sugar_. On this graph we can see the layers: the values for average and bad wines are place under values for good wines. The more sugar is contained in wine with higher density. The trend is not very clear but it still presents.
@@ -374,9 +421,12 @@ Finally I'll plot the dependency between _density_ and _residual.sugar_. On this
 ggplot(aes(y = residual.sugar, x = density), data = ww) +
   xlim(min(ww$density), quantile(ww$density, probs = .99)) +
   ylim(min(ww$residual.sugar), quantile(ww$residual.sugar, probs = .99)) +
-  geom_jitter(aes(color = ww$rate), size = 2, alpha = 1/2) +
-  scale_color_brewer(type = 'div') +
-  geom_point(data = subset(ww, ww$rate == 'very good'), aes(y = residual.sugar, x = density), color = I('#29a3a3'), size = 3)
+  geom_jitter(aes(color = ww$rate), size = 3) +
+  scale_color_brewer(palette = 'Blues') +
+  geom_point(data = subset(ww, ww$rate == 'very good'), 
+             aes(y = residual.sugar, x = density), 
+             color = I('#0a81db'), size = 3, alpha = 1) +
+  theme_dark()
 ```
 
 # Linear Models for Density and Quality
@@ -420,31 +470,36 @@ It's interesting that there were not found any strong dependency between any of 
 
 # Final Plots and Summary
 
-### Plot One - Residual Sugar Histogram
+### Plot One - Density by Rate
 ```{r echo=FALSE, warning=FALSE, message=FALSE, Plot_One}
-ggplot(aes(x = residual.sugar, fill = ..count..), data = ww) +
-  geom_histogram(binwidth = .03) +
-  scale_x_log10(breaks = c(0, 1, 1.5, 3, 8, 20, 70)) +
-  scale_fill_gradient("count", low = I('#33cccc'), high = "black", guide = guide_legend(title = 'Count')) +
-  xlab('Residual sugar (log10, g / dm^3)') +
+ggplot(aes(x = rate, y = density, fill = rate), data = ww) +
+  ylim(min(ww$density), quantile(ww$density, probs = .99)) +
+  geom_boxplot() +
+  scale_fill_brewer(palette = 'Greens', guide = guide_legend(title = 'Rate')) +
+  xlab('Density (g/cm^3)') +
   ylab('Count') +
-  ggtitle('Residual Sugar Distribution')
+  ggtitle('Density by Rate')
 ```
 
-The graph shows beautiful bimodal distribution of residual sugar in wines with 2 peaks at values 1.3 and 8.0 g/dm^3 that can correspond 2 types of wines: dry and off-dry. According dataset description it's pretty hard to find wines with less that 1.0 g/dm^3 and more than 45 g/mg^3 but we are lucky enough to find them in this dataset.
+Density - one of the characteristics that is different for wines with different quality. The median value is decreasing for better quality, the better wine the smaller range of density. For "very good"" wine quality 50% value are between 0.9917 and 0.9961 with median value of 0.9937. So the winemakers kept the ratio of residual sugar to alcohol (the density) in that range. But there is an oulier of this rule.
 
 ### Plot Two - Density vs. Acidity
 ```{r echo=FALSE, warning=FALSE, message=FALSE, Plot_Two}
 ggplot(aes(x = total.acidity, y = density, color = rate), data = ww) +
-  geom_jitter(alpha = 1/4) +
-  geom_jitter(alpha = 1/2, aes(x = total.acidity, y = density), color = I('#00664d'), data = subset(ww, ww$quality > 7)) +
-  scale_color_brewer(type = 'div', guide = guide_legend((title = 'Rate'), override.aes = list(alpha = 1, size = 2))) +
+  geom_jitter(alpha = 1/2, size = 2) +
+  geom_jitter(aes(x = total.acidity, y = density), data = subset(ww, ww$quality > 7), 
+              alpha = 1/2, size = 2,
+              color = I('#00664d')) +
+  scale_color_brewer(type = 'div', palette = 'Blues',
+                     guide = guide_legend((title = 'Rate'), 
+                                          override.aes = list(alpha = 1, size = 2))) +
   xlim(min(ww$total.acidity), quantile(ww$total.acidity, probs = .99)) +
   ylim(min(ww$density), quantile(ww$density, probs = .99)) +
   geom_smooth(color = I('#006666')) +
   xlab('Total acidity (g/dm^3)') +
   ylab('Density (g/cm^3)') +
-  ggtitle('Density vs. Acidity')
+  ggtitle('Density vs. Acidity') +
+  theme_dark()
 ```
 
 There is a tendency of increasing density according increasing acidity level, for most of wines we see that there is a linear relationship between these two variables. To avoid overplotting I've used _geomsmooth_ function to show the trend and the most of values for high quality wines are place below this line. Acidity level can vary but the density is lower for better wines. It's still possible to find the examples of high quality wines with high level acidity and density but there are not so much such values.
@@ -454,8 +509,8 @@ There is a tendency of increasing density according increasing acidity level, fo
 ggplot(aes(x = rate, y = total.acidity), data = ww) +
   ylim(quantile(ww$total.acidity, probs = .01), 
        quantile(ww$total.acidity, probs = .99)) +
-  geom_jitter(aes(color = alcohol)) +
-  scale_colour_gradient(low = I("blue"), high = I('yellow'), guide_legend(title = 'Alcohol (%)')) +
+  geom_jitter(aes(color = alcohol), size = 3) +
+  scale_colour_gradient(low = "#132B43", high = "#56B1F7", guide_legend(title = 'Alcohol (%)')) +
   xlab('Rate') +
   ylab('Total acidity (g/dm^3)') +
   ggtitle('Alcohol and Acidity vs. Quality')  
